@@ -2,7 +2,7 @@
   "name": "rereql",
   "version": "0.0.2",
   "description": "Connect GraphQL queries to React components via Redux",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "scripts": {
     "build": "babel src --out-dir lib --source-maps",
     "prepublish": "npm run clean && npm run build",
