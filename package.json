@@ -51,5 +51,8 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/Chris927/rereql.git"
-  }
+  },
+  "files": [
+    "lib", "src"
+  ]
 }
