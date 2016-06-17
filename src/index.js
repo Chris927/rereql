@@ -34,10 +34,13 @@ class Fetcher extends React.Component {
 const fetchQuery = (query, queryParams) => ({ type: 'rereql/FETCH', data: { query, queryParams } })
 
 export function rereqlMiddleware(fetcher) {
+  invariant(typeof fetcher === 'function', 'requires fetcher function')
   return store => next => action => {
     if (action.type === 'rereql/FETCH') {
       const { query, queryParams } = action.data
-      fetcher(query, queryParams, store.getState())
+      const promise = fetcher(query, queryParams, store.getState())
+      invariant(promise && promise.then, 'fetcher must return promise')
+      promise
       .then(json => (next({ type: 'rereql/SUCCESS', data: { query, queryParams, json } })))
       .catch(err => (next({ type: 'rereql/FAILURE', err: err })));
     }
@@ -45,7 +48,7 @@ export function rereqlMiddleware(fetcher) {
   }
 }
 
-export function rereqlReducer(prevState, action) {
+export function rereqlReducer(prevState = {}, action) {
   if (action.type === 'rereql/SUCCESS') {
     const { query, queryParams, json } = action.data
     const state = merge({}, prevState, {
@@ -55,7 +58,7 @@ export function rereqlReducer(prevState, action) {
     })
     return state
   }
-  return prevState || {}
+  return prevState
 }
 
 const ConnectedFetcher = connect((state, ownProps) => {
