@@ -1,11 +1,11 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import merge from 'lodash/merge'
+import invariant from 'invariant'
 
-export const RereqlConfig = ({ stateLocation, fetcher, children }) => {
-  console.log('RereqlConfig, stateLocation', stateLocation)
-  throw new Error('you must provide fetcher in props')
-  // TODO: not using stateLocation
+export const RereqlConfig = ({ fetcher, children }) => {
+  invariant(typeof fetcher === 'function', 'you must provide a fetcher function in props')
+  invariant(children, 'requires children')
   return children
 }
 
