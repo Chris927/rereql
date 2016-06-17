@@ -2,8 +2,9 @@ import React from 'react'
 import { connect } from 'react-redux'
 import merge from 'lodash/merge'
 
-export const ReclConfig = ({ stateLocation, children }) => {
+export const RereqlConfig = ({ stateLocation, fetcher, children }) => {
   console.log('RereqlConfig, stateLocation', stateLocation)
+  throw new Error('you must provide fetcher in props')
   // TODO: not using stateLocation
   return children
 }
