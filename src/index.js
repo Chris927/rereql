@@ -3,6 +3,7 @@ import { connect } from 'react-redux'
 import merge from 'lodash/merge'
 import invariant from 'invariant'
 
+// TODO: it may be unnecessary to specify a fetcher here, only the middleware may need it
 export const RereqlConfig = ({ fetcher, children }) => {
   invariant(typeof fetcher === 'function', 'you must provide a fetcher function in props')
   invariant(children, 'requires children')
