@@ -31,7 +31,7 @@ class Fetcher extends React.Component {
   }
 }
 
-const fetchQuery = (query, queryParams) => ({ type: 'rereql/FETCH', data: { query, queryParams } })
+export const fetchQuery = (query, queryParams) => ({ type: 'rereql/FETCH', data: { query, queryParams } })
 
 export function rereqlMiddleware(fetcher) {
   invariant(typeof fetcher === 'function', 'requires fetcher function')
