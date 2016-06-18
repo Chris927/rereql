@@ -19,12 +19,12 @@ class Fetcher extends React.Component {
     if (!data) fetch(query, queryParams)
   }
   render() {
-    const { comp, compProps, query, queryParams, data } = this.props
-    console.log('Fetcher, comp', comp)
-    console.log('Fetcher, compProps', compProps)
-    console.log('Fetcher, query', query)
-    console.log('Fetcher, data', data)
-    const props = merge({}, compProps, { data })
+    const { comp, compProps, query, queryParams, data, lastError } = this.props
+    const props = merge({}, compProps, data)
+    if (lastError) {
+      // TODO: should be a configurable component to display errors
+      return (<p>Unable to query API: { lastError.message || 'Error while fetching' }</p>)
+    }
     return data
       ? React.createElement(comp, props)
       : (<div>Fetching...</div>) // TODO: should be a configurable component to display while fetching
@@ -42,7 +42,7 @@ export function rereqlMiddleware(fetcher) {
       invariant(promise && promise.then, 'fetcher must return promise')
       promise
       .then(json => (next({ type: 'rereql/SUCCESS', data: { query, queryParams, json } })))
-      .catch(err => (next({ type: 'rereql/FAILURE', err: err })));
+      .catch(err => (next({ type: 'rereql/FAILURE', data: { query, queryParams, err } })));
     }
     return next(action)
   }
@@ -54,6 +54,20 @@ export function rereqlReducer(prevState = {}, action) {
     const state = merge({}, prevState, {
       [`${ query }`]: {
         [`${ JSON.stringify(queryParams) }`]: json
+      },
+      lastError: null
+    })
+    return state
+  } else if (action.type === 'rereql/FAILURE') {
+    const { query, queryParams, err } = action.data
+    const state = merge({}, prevState, {
+      [`${ query }`]: {
+        [`${ JSON.stringify(queryParams) }`]: null
+      },
+      lastError: {
+        message: err.toString(),
+        stack: err.stack,
+        err
       }
     })
     return state
@@ -67,7 +81,8 @@ const ConnectedFetcher = connect((state, ownProps) => {
     compProps: ownProps.compProps,
     query: ownProps.query,
     queryParams: ownProps.queryParams,
-    data: ((state.rereql || {})[ownProps.query] || {})[JSON.stringify(ownProps.queryParams)]
+    data: ((state.rereql || {})[ownProps.query] || {})[JSON.stringify(ownProps.queryParams)],
+    lastError: (state.rereql || {}).lastError
   }
   return result
 }, (dispatch) => ({
