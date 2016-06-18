@@ -4,21 +4,14 @@ import TestUtils from 'react-addons-test-utils'
 import { RereqlConfig } from '../../src/index'
 
 describe('RereqlConfig', () => {
-  it('should require a fetcher function', () => {
+  it('should require children', () => {
     expect(() => TestUtils.renderIntoDocument(
       <RereqlConfig>
-      </RereqlConfig>
-    )).toThrow(/provide a fetcher function/)
-
-    const fetcher = () => undefined
-
-    expect(() => TestUtils.renderIntoDocument(
-      <RereqlConfig fetcher={ fetcher }>
       </RereqlConfig>
     )).toThrow(/requires children/)
 
     expect(() => TestUtils.renderIntoDocument(
-      <RereqlConfig fetcher={ fetcher }>
+      <RereqlConfig>
         <div />
       </RereqlConfig>
     )).toNotThrow()
