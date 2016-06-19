@@ -32,18 +32,39 @@ class Fetcher extends React.Component {
 
 export const fetchQuery = (query, queryParams) => ({ type: 'rereql/FETCH', data: { query, queryParams } })
 
+const fetch = (fetcher, query, params, state) => {
+  const promise = fetcher(query, params, state)
+  invariant(promise && promise.then, 'fetcher must return promise')
+  return promise
+}
+
 export function rereqlMiddleware(fetcher) {
   invariant(typeof fetcher === 'function', 'requires fetcher function')
   return store => next => action => {
     if (action.type === 'rereql/FETCH') {
       const { query, queryParams } = action.data
-      const promise = fetcher(query, queryParams, store.getState())
-      invariant(promise && promise.then, 'fetcher must return promise')
-      promise
+      fetch(fetcher, query, queryParams, store.getState())
       .then(json => (next({ type: 'rereql/SUCCESS', data: { query, queryParams, json } })))
       .catch(err => (next({ type: 'rereql/FAILURE', data: { query, queryParams, err } })));
+      return next(action)
+    } else if (action[MUTATE]) {
+      const state = store.getState()
+      const { mapStateToQuery, mapStateToParams, types, resolve, reject } = action[MUTATE]
+      const [ requestType, successType, failureType ] = types
+      let [ query, params ] = [ mapStateToQuery(state), mapStateToParams(state) ]
+      fetch(fetcher, query, params, store.getState())
+      .then(json => {
+        resolve()
+        return next({ type: successType, data: { query, params, json } })
+      })
+      .catch(err => {
+        reject()
+        return next({ type: failureType, data: { query, params, err } })
+      });
+      return next({ type: requestType, data: { query, params } })
+    } else {
+      return next(action)
     }
-    return next(action)
   }
 }
 
@@ -95,3 +116,48 @@ export const rereql = (query, queryParams) => Component => (props) => {
     </ConnectedFetcher>
   )
 }
+
+export const mutates = ({ actionTypes }) => {
+
+  const [ requestType, successType, failureType ] = actionTypes
+
+  return (state = {}, action) => {
+    switch (action.type) {
+      case requestType:
+        return merge({}, state, {
+          isMutating: true,
+          lastError: null
+        })
+      case successType: 
+        return merge({}, state, {
+          isMutating: false,
+          lastError: null,
+          result: action.data.json
+        })
+      case failureType:
+        return merge({}, state, {
+          isMutating: false,
+          lastError: action.data.err
+        })
+    }
+    return state
+  }
+}
+
+const MUTATE = Symbol('GraphQL Mutation')
+
+export const dispatchMutateAction = (dispatch, { actionTypes, mapStateToQuery, mapStateToParams }) => {
+  return new Promise((resolve, reject) => {
+    console.log('dispatchMutateAction, about to dispatch')
+    dispatch({
+      [MUTATE]: {
+        types: actionTypes,
+        mapStateToQuery,
+        mapStateToParams,
+        resolve,
+        reject
+      }
+    })
+  })
+}
+
