@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import { createStore, applyMiddleware, compose, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import fetch from 'isomorphic-fetch'
-import { rereql, rereqlMiddleware, rereqlReducer, mutates } from '../../../lib'
+import { rereql, rereqlMiddleware, rereqlReducer, mutates, dispatchMutateAction } from '../../../lib'
 
 const apiEndpoint = 'http://localhost:3000/graphql'
 
@@ -37,9 +37,10 @@ const fetcher = (query, params, state) => {
 }
 
 // for mutations, we define our own action types
-const [ ADD_ORDER, ADD_ORDER_SUCCESS, ADD_ORDER_FAILURE ] = [
+const addOrderActions = [
   'ADD_ORDER', 'ADD_ORDER_SUCCESS', 'ADD_ORDER_FAILURE'
 ]
+const [ ADD_ORDER, ADD_ORDER_SUCCESS, ADD_ORDER_FAILURE ] = addOrderActions
 
 // we create the reducer, where 'rereql' *must* be set to the rereqlReducer.
 // For mutations, `mutates` maps the current state of a mutation (isMutating,
@@ -77,6 +78,18 @@ query($shopId:String) {
 }
 `
 
+const addOrderQuery = `
+mutation($shopId:String) {
+  addOrder(shopId:$shopId, tipInCents:20, items: [
+    { inventoryId:"burger", quantity:2 }
+  ]) {
+    createdOrder {
+      id
+    }
+  }
+}
+`
+
 // component to query and display orders. `rereql` is a higher order function
 // (similar to `connect` of react-redux) which received query and parameters,
 // and can then be applied to a component (anonymous, in this example).
@@ -95,7 +108,16 @@ const OrdersList = rereql(ordersQuery, { shopId: '123' })(({ data }) => {
 })
 
 // component to mutate (add an order) (TODO: not finished)
-const AddOrderButton = () => (<p>...</p>)
+import { connect } from 'react-redux'
+const AddOrderButton = connect((state, ownProps) => ({}), (dispatch) => ({
+  onAdd: () => dispatchMutateAction(dispatch, {
+    actionTypes: addOrderActions,
+    mapStateToQuery: (state) => addOrderQuery,
+    mapStateToParams: (state) => ({ shopId: '123' })
+  })
+}))(({ onAdd }) => (
+  <button onClick={ onAdd }>Add order</button>
+))
 
 // a plain component to combine OrdersList and AddOrderButton
 const Orders = () => (
