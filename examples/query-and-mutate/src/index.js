@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import { createStore, applyMiddleware, compose, combineReducers } from 'redux'
 import { Provider } from 'react-redux'
 import fetch from 'isomorphic-fetch'
-import { rereql, rereqlMiddleware, rereqlReducer, mutates, dispatchMutateAction } from '../../../lib'
+import { rereql, rereqlMiddleware, rereqlReducer, mutate, mutates } from '../../../lib'
 
 const apiEndpoint = 'http://localhost:3000/graphql'
 
@@ -52,11 +52,17 @@ const reducer = combineReducers({
   })
 })
 
+// middleware to alert us on new order (don't do this in production...)
+const alertOnOrderAdded = store => next => action => {
+  if(action.type === ADD_ORDER_SUCCESS) alert('Order added. You must refresh (for now) to see it.')
+  return next(action)
+}
+
 // when creating the store, we must apply rereqlMiddleware
 const store = createStore(
   reducer,
   compose(
-    applyMiddleware(rereqlMiddleware(fetcher) /*, moreMiddlewareIfNeeded */),
+    applyMiddleware(rereqlMiddleware(fetcher), alertOnOrderAdded /*, moreMiddlewareIfNeeded */),
 
     // activates Chrome dev tools, see https://github.com/zalmoxisus/redux-devtools-extension
     window.devToolsExtension ? window.devToolsExtension() : f => f
@@ -107,16 +113,13 @@ const OrdersList = rereql(ordersQuery, { shopId: '123' })(({ data }) => {
   }
 })
 
-// component to mutate (add an order) (TODO: not finished)
-import { connect } from 'react-redux'
-const AddOrderButton = connect((state, ownProps) => ({}), (dispatch) => ({
-  onAdd: () => dispatchMutateAction(dispatch, {
-    actionTypes: addOrderActions,
-    mapStateToQuery: (state) => addOrderQuery,
-    mapStateToParams: (state) => ({ shopId: '123' })
-  })
-}))(({ onAdd }) => (
-  <button onClick={ onAdd }>Add order</button>
+// component to mutate (add an order)
+const AddOrderButton = mutate({
+  actionTypes: addOrderActions,
+  mapStateToQuery: (state) => addOrderQuery,
+  mapStateToParams: (state) => ({ shopId: '123' })
+})(({ onAction }) => (
+  <button onClick={ onAction }>Add order</button>
 ))
 
 // a plain component to combine OrdersList and AddOrderButton

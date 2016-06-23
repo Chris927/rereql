@@ -148,7 +148,6 @@ const MUTATE = Symbol('GraphQL Mutation')
 
 export const dispatchMutateAction = (dispatch, { actionTypes, mapStateToQuery, mapStateToParams }) => {
   return new Promise((resolve, reject) => {
-    console.log('dispatchMutateAction, about to dispatch')
     dispatch({
       [MUTATE]: {
         types: actionTypes,
@@ -161,3 +160,11 @@ export const dispatchMutateAction = (dispatch, { actionTypes, mapStateToQuery, m
   })
 }
 
+export const mutate = ({ actionTypes, mapStateToQuery, mapStateToParams }) => component => {
+  const connected = connect(() => ({}), (dispatch) => ({
+    onAction: () => dispatchMutateAction(dispatch, {
+      actionTypes, mapStateToQuery, mapStateToParams
+    })
+  }))(component)
+  return connected
+}
