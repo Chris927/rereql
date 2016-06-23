@@ -8,7 +8,18 @@ Rereql connects [GraphQL](http://graphql.org/) queries to
 
 Rereql is now functional, see the [example](./examples/query-and-mutate).
 
-Connecting components to queries looks good and ready, but mutations are
-probably more cumbersome than necessary; I'll re-work the API for the latter.
-
 Please use experimentally, would love feedback.
+
+# Documentation
+
+See the [commented example](./examples/query-and-mutate/src/index.js).
+
+You can run the example locally:
+
+```
+cd ./examples/query-and-mutate
+npm install
+npm start
+```
+
+However, as there is no server, it will error out for now...
