@@ -1,6 +1,6 @@
 {
   "name": "rereql",
-  "version": "0.0.7",
+  "version": "0.1.0",
   "description": "Connect GraphQL queries to React components via Redux",
   "main": "./lib/index.js",
   "scripts": {
